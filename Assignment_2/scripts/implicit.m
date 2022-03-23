@@ -6,27 +6,15 @@ S1 = 100; % Input current price
 K = 100; % Strike price
 r = 0.02; % Risk-free interest rate
 sigma = 0.4; % Volatility
+M = 400; % Total steps along price axis
+N = 400; % Total steps along time axis
 
-% The grid division factor (can take values 1,2,4,8 etc.)
-% A higher c creates a finer grid
-c = 4; 
-
-% Create time grid using factor 'c'
-dtau = (T/25)/c; % Time-step size
-
-% Create price grid using factor 'c'
-S = [0:0.1*K/c:0.4*K,...
-0.45*K:0.05*K/c:0.8*K,...
-0.82*K:0.02*K/c:0.9*K,...
-0.91*K:0.01*K/c:1.1*K,...
-1.12*K:0.02*K/c:1.2*K,...
-1.25*K:.05*K/c:1.6*K,...
-1.7*K:0.1*K/c:2*K,...
-2.2*K, 2.4*K, 2.8*K,...
-3.6*K, 5*K, 7.5*K, 10*K];
-
-M = length(S); % Total steps along price axis
-N = T/dtau; % Total steps along time axis
+% Find Smax using the 3-sigma rule, then create the price grid
+S0 = 0;
+SMax = S1*exp((r-0.5*sigma*sigma)*T + 3*sigma*sqrt(T));
+dS = (SMax - S0)/M;
+S = S0:dS:SMax;
+dtau = T/N;
 
 % Initialize option price V(tau, S) with initial and boundary conditions
 V = zeros(N,M + 1);
@@ -60,7 +48,7 @@ for i = 2:M-1
         beta(i) = beta_forward(i);
     end 
 end  % end of M for-loop
-vector1 = [r*dtau, dtau *(alpha(1:M-1) + beta(1:M-1) + r), 0];
+vector1 = [r*dtau, dtau *(alpha(1:M-1) + beta(1:M-1) + r), 0)];
 % vector2 and vector2 have an extra 0 each to support spdiags later below
 vector2 = [0, 0, -dtau * beta(1:M-1)];
 vector3 = [-dtau * alpha(1:M-1), 0, 0];
