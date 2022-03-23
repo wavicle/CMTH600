@@ -68,6 +68,6 @@ for n = 1:N-1
     vector3 = [-dtau/2 * alpha(1:M-2), 0];
     M_hat = diag(vector1) + diag(vector2, 1) + diag(vector3, -1);
 
-    V(n+1, :) = transpose(inv(I + M_hat) *transpose(V(n, :))) ...
-        * transpose(I - M_hat);
+    V(n+1, :) = transpose(inv(I + M_hat) *(I - M_hat)*transpose(V(n, :)));
+        
 end % end of N for-loop
