@@ -12,7 +12,7 @@ Smax = S1*exp((r-0.5*sigma*sigma)*T + 3*sigma*sqrt(T));
 
 % The grid division factor (can take values 1,2,4,8 etc.)
 % A higher c creates a finer grid
-c = 4; 
+c = 1; 
 
 % Create time grid using factor 'c'
 dtau = (T/25)/c; % Time-step size
@@ -63,10 +63,10 @@ for i = 2:M-1
         beta(i) = beta_forward(i);
     end 
 end  % end of M for-loop
-vector1 = [-r*dtau/2, dtau/2 *(alpha(1:M-1) + beta(1:M-1) + r), 0];
+vector1 = [r*dtau, dtau *(alpha(1:M-1) + beta(1:M-1) + r), 0];
 % vector2 and vector2 have an extra 0 each to support spdiags later below
-vector2 = [0, 0, -dtau/2 * beta(1:M-1)];
-vector3 = [-dtau/2 * alpha(1:M-1), 0, 0];
+vector2 = [0, 0, -dtau * beta(1:M-1)];
+vector3 = [-dtau * alpha(1:M-1), 0, 0];
 % Use spdiags to create a sparse matrix, to save memory
 M_hat = spdiags(vector1', 0, M+1, M+1) ...
     + spdiags(vector2', 1, M+1, M+1) + spdiags(vector3', -1, M+1, M+1);
@@ -75,7 +75,7 @@ M_hat = spdiags(vector1', 0, M+1, M+1) ...
 
 for n = 1:N-1
     % Boundary conditions
-    V(n+1, 1) = V(n, 1) * ((1 + (r / 2) * dtau) / (1 - (r / 2) * dtau));
+    V(n+1, 1) = V(n, 1) / (1 + r * dtau);
     V(n+1, M) = V(n, M);
     % Solve using LU matrices calculated earlier for faster results
     B = (I - M_hat)*transpose(V(n, :));
