@@ -7,12 +7,9 @@ K = 100; % Strike price
 r = 0.02; % Risk-free interest rate
 sigma = 0.4; % Volatility
 
-% Choose smax using 3-sigma rule as explained in the class
-Smax = S1*exp((r-0.5*sigma*sigma)*T + 3*sigma*sqrt(T));
-
 % The grid division factor (can take values 1,2,4,8 etc.)
 % A higher c creates a finer grid
-c = 1; 
+c = 4; 
 
 % Create time grid using factor 'c'
 dtau = (T/25)/c; % Time-step size
