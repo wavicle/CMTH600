@@ -32,16 +32,16 @@ M = length(S); % Total steps along price axis
 N = T/dtau; % Total steps along time axis
 
 % Initialize option price V(tau, S) with initial and boundary conditions
-V = zeros(N,M);
+V = zeros(N,M + 1);
 for i = 1: M
     V(1, i) = max(K - S(i), 0); % Payoff for PUT option at tau = 0
 end
-V(1 , M) = 0; % Boundary condition at Smax for PUT option
+V(1 , M+1) = 0; % Boundary condition at Smax for PUT option
 
 % Initialize some matrices for later use
-alpha = zeros(1,M);
-beta = zeros(1,M);
-I = eye(M);
+alpha = zeros(1,M+1);
+beta = zeros(1,M+1);
+I = eye(M+1);
 
 % Calculate M_hat (only once) and the LU decomposition of (I + M_hat). 
 % As per the assignment instructions, we should avoid unnecessary
@@ -63,9 +63,9 @@ for i = 2:M-1
         beta(i) = beta_forward(i);
     end 
 end  % end of M for-loop
-vector1 = [-r*dtau/2, dtau/2 *(alpha(1:M-2) + beta(1:M-2) + r), 0];
-vector2 = [0, -dtau/2 * beta(1:M-2)];
-vector3 = [-dtau/2 * alpha(1:M-2), 0];
+vector1 = [-r*dtau/2, dtau/2 *(alpha(1:M-1) + beta(1:M-1) + r), 0];
+vector2 = [0, -dtau/2 * beta(1:M-1)];
+vector3 = [-dtau/2 * alpha(1:M-1), 0];
 M_hat = diag(vector1) + diag(vector2, 1) + diag(vector3, -1);
 % Use LU decomposition for faster results
 [L, U] = lu(I + M_hat);
