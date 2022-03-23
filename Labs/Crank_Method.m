@@ -1,21 +1,21 @@
 close all;
 clear all;
 clc;
-T = 0.25;
+T = 1;
 S1 = 0;
-Smax = 3;
-K = 1;
-M = 50;
-N = 50;
-r = 0.05;
-sigma = 0.3;
+Smax = 300;
+K = 100;
+M = 100*2;
+N = 100*2;
+r = 0.02;
+sigma = 0.4;
 dS = (Smax - 0)/M;
 dtau = T / N;
 V = zeros(N,M);
-V(1 , M) = Smax;
+V(1 , M) = 0;
 S = 0: dS: Smax;
 for i = 1: M
-    V(1, i) = max(S(i) - K, 0);    
+    V(1, i) = max(-S(i) + K, 0);    
 end
 alpha = zeros(1,M);
 beta = zeros(1,M);
