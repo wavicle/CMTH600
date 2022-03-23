@@ -1,21 +1,29 @@
 close all; clear all; clc;
 
-% Input parameters
+% Basic input parameters
 T = 1; % total time
 S1 = 100; % Input current price
 K = 100; % Strike price
 r = 0.02; % Risk-free interest rate
 sigma = 0.4; % Volatility
+dtau = 0.005; % Time-step size
 
 % Choose smax using 3-sigma rule as explained in the class
 Smax = S1*exp((r-0.5*sigma*sigma)*T + 3*sigma*sqrt(T));
 
-M = 100;
-N = 100;
-dS = (Smax - 0)/M;
-dtau = T / N;
+% Create price grid
+S = [0:0.1*K:0.4*K,...
+0.45*K:0.05*K:0.8*K,...
+0.82*K:0.02*K:0.9*K,...
+0.91*K:0.01*K:1.1*K,...
+1.12*K:0.02*K:1.2*K,...
+1.25*K:.05*K:1.6*K,...
+1.7*K:0.1*K:2*K,...
+2.2*K, 2.4*K, 2.8*K,...
+3.6*K, 5*K, 7.5*K, 10*K];
 
-S = 0: dS: Smax;
+M = length(S); % Total steps along price axis
+N = T/dtau; % Total steps along time axis
 
 % Initialize option price V(tau, S) with initial and boundary conditions
 V = zeros(N,M);
@@ -45,7 +53,6 @@ for n = 1:N-1
             alpha(i) = alpha_central(i);
             beta(i) = beta_central(i);
         else 
-
             alpha(i) = alpha_forward(i);
             beta(i) = beta_forward(i);
         end 
@@ -55,5 +62,6 @@ for n = 1:N-1
     vector3 = [-dtau/2 * alpha(1:M-2), 0];
     M_hat = diag(vector1) + diag(vector2, 1) + diag(vector3, -1);
 
-    V(n+1, :) = transpose(inv(I + M_hat) *transpose(V(n, :))) * transpose(I - M_hat);
+    V(n+1, :) = transpose(inv(I + M_hat) *transpose(V(n, :))) ...
+        * transpose(I - M_hat);
 end % end of N for-loop
