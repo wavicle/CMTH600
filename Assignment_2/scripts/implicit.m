@@ -6,8 +6,8 @@ S1 = 100; % Input current price
 K = 100; % Strike price
 r = 0.02; % Risk-free interest rate
 sigma = 0.4; % Volatility
-M = 400; % Total steps along price axis
-N = 400; % Total steps along time axis
+M = 800; % Total steps along price axis
+N = 800; % Total steps along time axis
 
 % Find Smax using the 3-sigma rule, then create the price grid
 S0 = 0;
@@ -48,7 +48,7 @@ for i = 2:M-1
         beta(i) = beta_forward(i);
     end 
 end  % end of M for-loop
-vector1 = [r*dtau, dtau *(alpha(1:M-1) + beta(1:M-1) + r), 0)];
+vector1 = [r*dtau, dtau *(alpha(1:M-1) + beta(1:M-1) + r), 0];
 % vector2 and vector2 have an extra 0 each to support spdiags later below
 vector2 = [0, 0, -dtau * beta(1:M-1)];
 vector3 = [-dtau * alpha(1:M-1), 0, 0];
@@ -63,6 +63,38 @@ for n = 1:N-1
     V(n+1, 1) = V(n, 1) / (1 - r * dtau);
     V(n+1, M) = V(n, M);
     % Solve using LU matrices calculated earlier for faster results
-    B = (I - M_hat)*transpose(V(n, :));
+    B = transpose(V(n, :));
     V(n+1, :) = transpose(U\(L\B));
 end % end of N for-loop
+
+%
+% Evaluate the current option price V1
+%
+% find the smalleset interval including S1 
+indx1 = max(find(S<=S1));
+indx2 = min(find(S>=S1));
+if indx1 == indx2  % S1 on the end of subintervals
+    V1= V(N, indx1);
+else    % S1 not on the end, estimate V1 by the linear interpolation
+    w = (S1-S(indx1))/(S(indx2)-S(indx1));
+    V1 = V(N,indx1)*w + (1-w)*V(N, indx2);
+end
+disp(['Option price at (t=0) is ', num2str(V1), ' when S=', num2str(S1)]);
+
+% Plot the graph and compare with blsprice 
+[C,P] = blsprice(S(1:M),K, r, T, sigma);
+subplot(2,1,1);
+hold on;
+plot(S(1:M), V(N, 1:M));
+plot(S1, V1, '-o');
+text(S1, V1, ['  ', 'Option price =', num2str(V1), ' at S = 100']);
+
+title(['Option price using Implicit for M=', num2str(M), ', N=', num2str(N)]);
+xlabel('Stock price'); ylabel('Option price at t = 0');
+
+hold off;
+subplot(2,1,2);
+scatter(P, V(N,1:M), 10, 'filled');
+refline;
+title(['Compare blsprice vs Implicit method for ', num2str(M), ', N=', num2str(N)]);
+xlabel('Option price using blsprice'); ylabel('Computed price');

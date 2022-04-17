@@ -16,14 +16,14 @@ dtau = (T/25)/c; % Time-step size
 
 % Create price grid using factor 'c'
 S = [0:0.1*K/c:0.4*K,...
-0.45*K:0.05*K/c:0.8*K,...
-0.82*K:0.02*K/c:0.9*K,...
-0.91*K:0.01*K/c:1.1*K,...
+0.425*K:0.05*K/c:0.8*K,...
+0.805*K:0.02*K/c:0.9*K,...
+0.905*K:0.01*K/c:1.1*K,...
 1.12*K:0.02*K/c:1.2*K,...
 1.25*K:.05*K/c:1.6*K,...
 1.7*K:0.1*K/c:2*K,...
-2.2*K, 2.4*K, 2.8*K,...
-3.6*K, 5*K, 7.5*K, 10*K];
+2.2*K, 2.3*K, 2.4*K, 2.6*K, 2.8*K,...
+3.2*K, 3.4*K, 3.6*K, 4.3*K, 5*K, 7.5*K, 8.125*K, 8.75*K, 9.375*K, 10*K];
 
 M = length(S); % Total steps along price axis
 N = T/dtau; % Total steps along time axis
@@ -75,6 +75,25 @@ for n = 1:N-1
     V(n+1, 1) = V(n, 1) / (1 - r * dtau);
     V(n+1, M) = V(n, M);
     % Solve using LU matrices calculated earlier for faster results
-    B = (I - M_hat)*transpose(V(n, :));
+    B = transpose(V(n, :));
     V(n+1, :) = transpose(U\(L\B));
 end % end of N for-loop
+
+%
+% Evaluate the current option price V1
+%
+% find the smalleset interval including S1 
+indx1 = max(find(S<=S1));
+indx2 = min(find(S>=S1));
+if indx1 == indx2  % S1 on the end of subintervals
+    V1= V(N, indx1);
+else    % S1 not on the end, estimate V1 by the linear interpolation
+    w = (S1-S(indx1))/(S(indx2)-S(indx1));
+    V1 = V(N,indx1)*w + (1-w)*V(N, indx2);
+end
+disp(['Option price at (t=0) is ', num2str(V1), ' when S=', num2str(S1)]);
+
+% Plot the graph and compare with blsprice 
+hold on; [C,P] = blsprice(S(1:M),K, r, T, sigma); plot(S(1:M), P); plot(S(1:M), V(N, 1:M));
+legend('Implicit method', 'blsprice');
+xlabel('Stock price'); ylabel('Option price at t = 0');

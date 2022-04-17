@@ -66,3 +66,35 @@ for n = 1:N-1
     B = (I - M_hat)*transpose(V(n, :));
     V(n+1, :) = transpose(U\(L\B));
 end % end of N for-loop
+
+%
+% Evaluate the current option price V1
+%
+% find the smalleset interval including S1 
+indx1 = max(find(S<=S1));
+indx2 = min(find(S>=S1));
+if indx1 == indx2  % S1 on the end of subintervals
+    V1= V(N, indx1);
+else    % S1 not on the end, estimate V1 by the linear interpolation
+    w = (S1-S(indx1))/(S(indx2)-S(indx1));
+    V1 = V(N,indx1)*w + (1-w)*V(N, indx2);
+end
+disp(['Option price at (t=0) is ', num2str(V1), ' when S=', num2str(S1)]);
+
+% Plot the graph and compare with blsprice 
+[C,P] = blsprice(S(1:M),K, r, T, sigma);
+subplot(2,1,1);
+hold on;
+plot(S(1:M), V(N, 1:M));
+plot(S1, V1, '-o');
+text(S1, V1, ['  ', 'Option price =', num2str(V1), ' at S = 100']);
+
+title(['Option price using Crank Nicolson for M=', num2str(M), ', N=', num2str(N)]);
+xlabel('Stock price'); ylabel('Option price at t = 0');
+
+hold off;
+subplot(2,1,2);
+scatter(P, V(N,1:M), 10, 'filled');
+refline;
+title(['Compare blsprice vs Crank Nicolson method for ', num2str(M), ', N=', num2str(N)]);
+xlabel('Option price using blsprice'); ylabel('Computed price');
