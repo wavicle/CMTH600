@@ -1,0 +1,273 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>implicit_grid</title><meta name="generator" content="MATLAB 9.10"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2022-03-23"><meta name="DC.source" content="implicit_grid.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; }
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+span.typesection { color:#A0522D }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><pre class="codeinput">close <span class="string">all</span>; clear <span class="string">all</span>; clc;
+
+<span class="comment">% Basic input parameters</span>
+T = 1; <span class="comment">% total time</span>
+S1 = 100; <span class="comment">% Input current price</span>
+K = 100; <span class="comment">% Strike price</span>
+r = 0.02; <span class="comment">% Risk-free interest rate</span>
+sigma = 0.4; <span class="comment">% Volatility</span>
+
+<span class="comment">% The grid division factor (can take values 1,2,4,8 etc.)</span>
+<span class="comment">% A higher c creates a finer grid</span>
+c = 4;
+
+<span class="comment">% Create time grid using factor 'c'</span>
+dtau = (T/25)/c; <span class="comment">% Time-step size</span>
+
+<span class="comment">% Create price grid using factor 'c'</span>
+S = [0:0.1*K/c:0.4*K,<span class="keyword">...</span>
+0.425*K:0.05*K/c:0.8*K,<span class="keyword">...</span>
+0.805*K:0.02*K/c:0.9*K,<span class="keyword">...</span>
+0.905*K:0.01*K/c:1.1*K,<span class="keyword">...</span>
+1.12*K:0.02*K/c:1.2*K,<span class="keyword">...</span>
+1.25*K:.05*K/c:1.6*K,<span class="keyword">...</span>
+1.7*K:0.1*K/c:2*K,<span class="keyword">...</span>
+2.2*K, 2.3*K, 2.4*K, 2.6*K, 2.8*K,<span class="keyword">...</span>
+3.2*K, 3.4*K, 3.6*K, 4.3*K, 5*K, 7.5*K, 8.125*K, 8.75*K, 9.375*K, 10*K];
+
+M = length(S); <span class="comment">% Total steps along price axis</span>
+N = T/dtau; <span class="comment">% Total steps along time axis</span>
+
+<span class="comment">% Initialize option price V(tau, S) with initial and boundary conditions</span>
+V = zeros(N,M + 1);
+<span class="keyword">for</span> i = 1: M
+    V(1, i) = max(K - S(i), 0); <span class="comment">% Payoff for PUT option at tau = 0</span>
+<span class="keyword">end</span>
+V(1 , M+1) = 0; <span class="comment">% Boundary condition at Smax for PUT option</span>
+
+<span class="comment">% Initialize some matrices for later use</span>
+alpha = zeros(1,M+1);
+beta = zeros(1,M+1);
+I = eye(M+1);
+
+<span class="comment">% Calculate M_hat (only once) and the LU decomposition of (I + M_hat).</span>
+<span class="comment">% As per the assignment instructions, we should avoid unnecessary</span>
+<span class="comment">% calculations, hence this is pulled outside the second loop.</span>
+<span class="keyword">for</span> i = 2:M-1
+    alpha_central(i) = ((sigma ^ 2) * (S(i) ^2))/(((S(i) - S(i-1)) <span class="keyword">...</span>
+        * (S(i+1) - S(i-1)))) - (r * S(i))/(S(i+1) - S(i-1));
+    beta_central(i) = ((sigma ^ 2) * (S(i) ^2))/(((S(i+1) - S(i)) <span class="keyword">...</span>
+        * (S(i+1) - S(i-1)))) + (r * S(i))/(S(i+1) - S(i-1));
+    alpha_forward(i) = ((sigma ^ 2) * (S(i) ^2))/(((S(i) - S(i-1)) <span class="keyword">...</span>
+        * (S(i+1) - S(i-1))));
+    beta_forward(i) = ((sigma ^ 2) * (S(i) ^2))/(((S(i+1) - S(i)) <span class="keyword">...</span>
+        * (S(i+1) - S(i-1)))) + (r * S(i))/(S(i+1) - S(i-1));
+    <span class="keyword">if</span> (alpha_central(i) &gt;= 0 ) &amp;&amp; (beta_central(i) &gt;= 0)
+        alpha(i) = alpha_central(i);
+        beta(i) = beta_central(i);
+    <span class="keyword">else</span>
+        alpha(i) = alpha_forward(i);
+        beta(i) = beta_forward(i);
+    <span class="keyword">end</span>
+<span class="keyword">end</span>  <span class="comment">% end of M for-loop</span>
+vector1 = [r*dtau, dtau *(alpha(1:M-1) + beta(1:M-1) + r), 0];
+<span class="comment">% vector2 and vector2 have an extra 0 each to support spdiags later below</span>
+vector2 = [0, 0, -dtau * beta(1:M-1)];
+vector3 = [-dtau * alpha(1:M-1), 0, 0];
+<span class="comment">% Use spdiags to create a sparse matrix, to save memory</span>
+M_hat = spdiags(vector1', 0, M+1, M+1) <span class="keyword">...</span>
+    + spdiags(vector2', 1, M+1, M+1) + spdiags(vector3', -1, M+1, M+1);
+<span class="comment">% Use LU decomposition for faster results</span>
+[L, U] = lu(I + M_hat);
+
+<span class="keyword">for</span> n = 1:N-1
+    <span class="comment">% Boundary conditions</span>
+    V(n+1, 1) = V(n, 1) / (1 - r * dtau);
+    V(n+1, M) = V(n, M);
+    <span class="comment">% Solve using LU matrices calculated earlier for faster results</span>
+    B = transpose(V(n, :));
+    V(n+1, :) = transpose(U\(L\B));
+<span class="keyword">end</span> <span class="comment">% end of N for-loop</span>
+
+<span class="comment">%</span>
+<span class="comment">% Evaluate the current option price V1</span>
+<span class="comment">%</span>
+<span class="comment">% find the smalleset interval including S1</span>
+indx1 = max(find(S&lt;=S1));
+indx2 = min(find(S&gt;=S1));
+<span class="keyword">if</span> indx1 == indx2  <span class="comment">% S1 on the end of subintervals</span>
+    V1= V(N, indx1);
+<span class="keyword">else</span>    <span class="comment">% S1 not on the end, estimate V1 by the linear interpolation</span>
+    w = (S1-S(indx1))/(S(indx2)-S(indx1));
+    V1 = V(N,indx1)*w + (1-w)*V(N, indx2);
+<span class="keyword">end</span>
+disp([<span class="string">'Option price at (t=0) is '</span>, num2str(V1), <span class="string">' when S='</span>, num2str(S1)]);
+
+<span class="comment">% Plot the graph and compare with blsprice</span>
+hold <span class="string">on</span>; [C,P] = blsprice(S(1:M),K, r, T, sigma); plot(S(1:M), P); plot(S(1:M), V(N, 1:M));
+legend(<span class="string">'Implicit method'</span>, <span class="string">'blsprice'</span>);
+xlabel(<span class="string">'Stock price'</span>); ylabel(<span class="string">'Option price at t = 0'</span>);
+</pre><pre class="codeoutput">Option price at (t=0) is 14.2135 when S=100
+</pre><img vspace="5" hspace="5" src="implicit_grid_01.png" alt=""> <p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2021a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+close all; clear all; clc;
+
+% Basic input parameters
+T = 1; % total time
+S1 = 100; % Input current price
+K = 100; % Strike price
+r = 0.02; % Risk-free interest rate
+sigma = 0.4; % Volatility
+
+% The grid division factor (can take values 1,2,4,8 etc.)
+% A higher c creates a finer grid
+c = 4; 
+
+% Create time grid using factor 'c'
+dtau = (T/25)/c; % Time-step size
+
+% Create price grid using factor 'c'
+S = [0:0.1*K/c:0.4*K,...
+0.425*K:0.05*K/c:0.8*K,...
+0.805*K:0.02*K/c:0.9*K,...
+0.905*K:0.01*K/c:1.1*K,...
+1.12*K:0.02*K/c:1.2*K,...
+1.25*K:.05*K/c:1.6*K,...
+1.7*K:0.1*K/c:2*K,...
+2.2*K, 2.3*K, 2.4*K, 2.6*K, 2.8*K,...
+3.2*K, 3.4*K, 3.6*K, 4.3*K, 5*K, 7.5*K, 8.125*K, 8.75*K, 9.375*K, 10*K];
+
+M = length(S); % Total steps along price axis
+N = T/dtau; % Total steps along time axis
+
+% Initialize option price V(tau, S) with initial and boundary conditions
+V = zeros(N,M + 1);
+for i = 1: M
+    V(1, i) = max(K - S(i), 0); % Payoff for PUT option at tau = 0
+end
+V(1 , M+1) = 0; % Boundary condition at Smax for PUT option
+
+% Initialize some matrices for later use
+alpha = zeros(1,M+1);
+beta = zeros(1,M+1);
+I = eye(M+1);
+
+% Calculate M_hat (only once) and the LU decomposition of (I + M_hat). 
+% As per the assignment instructions, we should avoid unnecessary
+% calculations, hence this is pulled outside the second loop.
+for i = 2:M-1
+    alpha_central(i) = ((sigma ^ 2) * (S(i) ^2))/(((S(i) - S(i-1)) ...
+        * (S(i+1) - S(i-1)))) - (r * S(i))/(S(i+1) - S(i-1));
+    beta_central(i) = ((sigma ^ 2) * (S(i) ^2))/(((S(i+1) - S(i)) ...
+        * (S(i+1) - S(i-1)))) + (r * S(i))/(S(i+1) - S(i-1));
+    alpha_forward(i) = ((sigma ^ 2) * (S(i) ^2))/(((S(i) - S(i-1)) ...
+        * (S(i+1) - S(i-1))));
+    beta_forward(i) = ((sigma ^ 2) * (S(i) ^2))/(((S(i+1) - S(i)) ...
+        * (S(i+1) - S(i-1)))) + (r * S(i))/(S(i+1) - S(i-1));
+    if (alpha_central(i) >= 0 ) && (beta_central(i) >= 0)
+        alpha(i) = alpha_central(i);
+        beta(i) = beta_central(i);
+    else 
+        alpha(i) = alpha_forward(i);
+        beta(i) = beta_forward(i);
+    end 
+end  % end of M for-loop
+vector1 = [r*dtau, dtau *(alpha(1:M-1) + beta(1:M-1) + r), 0];
+% vector2 and vector2 have an extra 0 each to support spdiags later below
+vector2 = [0, 0, -dtau * beta(1:M-1)];
+vector3 = [-dtau * alpha(1:M-1), 0, 0];
+% Use spdiags to create a sparse matrix, to save memory
+M_hat = spdiags(vector1', 0, M+1, M+1) ...
+    + spdiags(vector2', 1, M+1, M+1) + spdiags(vector3', -1, M+1, M+1);
+% Use LU decomposition for faster results
+[L, U] = lu(I + M_hat);
+
+for n = 1:N-1
+    % Boundary conditions
+    V(n+1, 1) = V(n, 1) / (1 - r * dtau);
+    V(n+1, M) = V(n, M);
+    % Solve using LU matrices calculated earlier for faster results
+    B = transpose(V(n, :));
+    V(n+1, :) = transpose(U\(L\B));
+end % end of N for-loop
+
+%
+% Evaluate the current option price V1
+%
+% find the smalleset interval including S1 
+indx1 = max(find(S<=S1));
+indx2 = min(find(S>=S1));
+if indx1 == indx2  % S1 on the end of subintervals
+    V1= V(N, indx1);
+else    % S1 not on the end, estimate V1 by the linear interpolation
+    w = (S1-S(indx1))/(S(indx2)-S(indx1));
+    V1 = V(N,indx1)*w + (1-w)*V(N, indx2);
+end
+disp(['Option price at (t=0) is ', num2str(V1), ' when S=', num2str(S1)]);
+
+% Plot the graph and compare with blsprice 
+hold on; [C,P] = blsprice(S(1:M),K, r, T, sigma); plot(S(1:M), P); plot(S(1:M), V(N, 1:M));
+legend('Implicit method', 'blsprice');
+xlabel('Stock price'); ylabel('Option price at t = 0');
+
+##### SOURCE END #####
+--></body></html>

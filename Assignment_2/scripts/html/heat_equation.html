@@ -1,0 +1,212 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>heat_equation</title><meta name="generator" content="MATLAB 9.10"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2022-03-23"><meta name="DC.source" content="heat_equation.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; }
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+span.typesection { color:#A0522D }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><pre class="codeinput">close <span class="string">all</span>; clear <span class="string">all</span>; clc;
+
+M = 50; N = 50;
+X = 0:1/M:1;
+dtau = 1/N;
+
+U = zeros(N,M + 1);
+<span class="keyword">for</span> i = 1: M
+    U(1, i) = -(X(i)*X(i)) + X(i); <span class="comment">% Initial condition</span>
+<span class="keyword">end</span>
+U(1 , M+1) = 0; <span class="comment">% Boundary condition at x = 1</span>
+
+<span class="comment">% Initialize some matrices for later use</span>
+I = eye(M+1);
+
+vector1 = [1, dtau + X(1:M-1).^2, 1];
+<span class="comment">% vector2 and vector2 have an extra 0 each to support spdiags later below</span>
+vector2 = [0, 0, -dtau/2*ones(1,M-1)];
+vector3 = [-dtau/2*ones(1,M-1), 0, 0];
+<span class="comment">% Use spdiags to create a sparse matrix, to save memory</span>
+M1 = spdiags(vector1', 0, M+1, M+1) <span class="keyword">...</span>
+    + spdiags(vector2', 1, M+1, M+1) + spdiags(vector3', -1, M+1, M+1);
+
+vector1 = [1, -dtau + X(1:M-1).^2, 1];
+<span class="comment">% vector2 and vector2 have an extra 0 each to support spdiags later below</span>
+vector2 = [0, 0, dtau/2*ones(1,M-1)];
+vector3 = [dtau/2*ones(1,M-1), 0, 0];
+<span class="comment">% Use spdiags to create a sparse matrix, to save memory</span>
+M2 = spdiags(vector1', 0, M+1, M+1) <span class="keyword">...</span>
+    + spdiags(vector2', 1, M+1, M+1) + spdiags(vector3', -1, M+1, M+1);
+
+<span class="comment">% Use LU decomposition for faster results</span>
+[L, U] = lu(M1);
+
+<span class="keyword">for</span> n = 1:N-1
+    <span class="comment">% Boundary conditions</span>
+    U(n+1, M) = U(n, M);
+    <span class="comment">% Solve using LU matrices calculated earlier for faster results</span>
+    B = M2*transpose(U(n, :));
+    U(n+1, :) = transpose(U\(L\B));
+<span class="keyword">end</span> <span class="comment">% end of N for-loop</span>
+</pre><pre class="codeoutput">Warning: Matrix is close to singular or badly scaled. Results may be inaccurate.
+RCOND =  3.520111e-20. 
+Warning: Matrix is close to singular or badly scaled. Results may be inaccurate.
+RCOND =  2.716692e-22. 
+Warning: Matrix is close to singular or badly scaled. Results may be inaccurate.
+RCOND =  1.707899e-24. 
+Warning: Matrix is close to singular or badly scaled. Results may be inaccurate.
+RCOND =  8.821692e-27. 
+Warning: Matrix is close to singular or badly scaled. Results may be inaccurate.
+RCOND =  3.773668e-29. 
+Warning: Matrix is close to singular or badly scaled. Results may be inaccurate.
+RCOND =  1.346796e-31. 
+Warning: Matrix is close to singular or badly scaled. Results may be inaccurate.
+RCOND =  4.037824e-34. 
+Warning: Matrix is close to singular or badly scaled. Results may be inaccurate.
+RCOND =  1.023478e-36. 
+Warning: Matrix is close to singular or badly scaled. Results may be inaccurate.
+RCOND =  2.206438e-39. 
+Warning: Matrix is close to singular or badly scaled. Results may be inaccurate.
+RCOND =  4.068351e-42. 
+Warning: Matrix is close to singular or badly scaled. Results may be inaccurate.
+RCOND =  6.449712e-45. 
+Warning: Matrix is close to singular or badly scaled. Results may be inaccurate.
+RCOND =  8.834910e-48. 
+Warning: Matrix is close to singular or badly scaled. Results may be inaccurate.
+RCOND =  1.050566e-50. 
+Warning: Matrix is close to singular or badly scaled. Results may be inaccurate.
+RCOND =  1.089203e-53. 
+Warning: Matrix is close to singular or badly scaled. Results may be inaccurate.
+RCOND =  9.886835e-57. 
+Warning: Matrix is close to singular or badly scaled. Results may be inaccurate.
+RCOND =  7.888058e-60. 
+Warning: Matrix is close to singular or badly scaled. Results may be inaccurate.
+RCOND =  5.552113e-63. 
+Warning: Matrix is close to singular or badly scaled. Results may be inaccurate.
+RCOND =  3.459786e-66. 
+Warning: Matrix is close to singular or badly scaled. Results may be inaccurate.
+RCOND =  1.915104e-69. 
+Warning: Matrix is close to singular or badly scaled. Results may be inaccurate.
+RCOND =  9.446383e-73. 
+Warning: Matrix is close to singular or badly scaled. Results may be inaccurate.
+RCOND =  4.164608e-76. 
+Warning: Matrix is close to singular or badly scaled. Results may be inaccurate.
+RCOND =  1.063886e-79. 
+Warning: Matrix is close to singular or badly scaled. Results may be inaccurate.
+RCOND =  1.316451e-41. 
+Warning: Matrix is close to singular or badly scaled. Results may be inaccurate.
+RCOND =  3.047157e-77. 
+Warning: Matrix is close to singular or badly scaled. Results may be inaccurate.
+RCOND =  4.804763e-99. 
+Warning: Matrix is close to singular or badly scaled. Results may be inaccurate.
+RCOND = 5.514869e-137. 
+Warning: Matrix is close to singular or badly scaled. Results may be inaccurate.
+RCOND = -1.000000e+00. 
+Warning: Matrix is close to singular or badly scaled. Results may be inaccurate.
+RCOND = -1.000000e+00. 
+</pre><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2021a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+close all; clear all; clc;
+
+M = 50; N = 50;
+X = 0:1/M:1;
+dtau = 1/N;
+
+U = zeros(N,M + 1);
+for i = 1: M
+    U(1, i) = -(X(i)*X(i)) + X(i); % Initial condition
+end
+U(1 , M+1) = 0; % Boundary condition at x = 1
+
+% Initialize some matrices for later use
+I = eye(M+1);
+
+vector1 = [1, dtau + X(1:M-1).^2, 1];
+% vector2 and vector2 have an extra 0 each to support spdiags later below
+vector2 = [0, 0, -dtau/2*ones(1,M-1)];
+vector3 = [-dtau/2*ones(1,M-1), 0, 0];
+% Use spdiags to create a sparse matrix, to save memory
+M1 = spdiags(vector1', 0, M+1, M+1) ...
+    + spdiags(vector2', 1, M+1, M+1) + spdiags(vector3', -1, M+1, M+1);
+
+vector1 = [1, -dtau + X(1:M-1).^2, 1];
+% vector2 and vector2 have an extra 0 each to support spdiags later below
+vector2 = [0, 0, dtau/2*ones(1,M-1)];
+vector3 = [dtau/2*ones(1,M-1), 0, 0];
+% Use spdiags to create a sparse matrix, to save memory
+M2 = spdiags(vector1', 0, M+1, M+1) ...
+    + spdiags(vector2', 1, M+1, M+1) + spdiags(vector3', -1, M+1, M+1);
+
+% Use LU decomposition for faster results
+[L, U] = lu(M1);
+
+for n = 1:N-1
+    % Boundary conditions
+    U(n+1, M) = U(n, M);
+    % Solve using LU matrices calculated earlier for faster results
+    B = M2*transpose(U(n, :));
+    U(n+1, :) = transpose(U\(L\B));
+end % end of N for-loop
+
+##### SOURCE END #####
+--></body></html>
