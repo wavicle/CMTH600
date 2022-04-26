@@ -1,4 +1,4 @@
-function V0 = Eur_Call_LVF_PDE(S0, K, T, r, x, SMax, M, N)
+function V0 = Eur_Call_LVF_FD(S0, K, T, r, x, SMax, M, N)
 %
 % Price the European call option of the LVF model by the explicit Finite difference method.
 %
