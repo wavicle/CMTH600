@@ -1,5 +1,5 @@
 % Use rng to fix random numbers
-clc; clear; close all; rng(37);
+clc; clear; close all; rng(54);
 disp('Please give this program a few min to complete')
 
 % Use values from previous questions
